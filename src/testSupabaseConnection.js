@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-require('dotenv').config(); // Load environment variables
+require('dotenv').config({path:__dirname+'../.env'}) // Load environment variables
 
 // Retrieve Supabase credentials from environment variables
 const SUPABASE_URL = process.env.SUPABASE_URL;
