@@ -1,0 +1,90 @@
+app.get('/api/products', async (req, res) => {
+    const { search, status, category, page = 1, limit = 10 } = req.query;
+  
+    const pageNumber = parseInt(page);
+    const pageLimit = parseInt(limit);
+    const offset = (pageNumber - 1) * pageLimit;
+  
+    let query = supabase
+      .from('products')  // Query from the item_master.products table
+      .select(`
+        released_products (
+          old_item_code,
+          related_off_cut,
+          related_fg,
+          ardis_item_type,
+          related_rm,
+          min_stock,
+          max_stock,
+          duty_rate_in_percent,
+          hs_code,
+          production_warehouse,
+          cost_calculation_group_id,
+          default_order_type,
+          gross_depth,
+          gross_product_height,
+          gross_product_width,
+          inventory_unit_symbol,
+          item_model_group_id,
+          product_coverage_group_id,
+          product_group_id,
+          production_group_id,
+          production_pool_id,
+          production_type,
+          product_number,
+          product_search_name,
+          product_subtype,
+          product_type,
+          product_volume,
+          project_category_id,
+          purchase_price,
+          purchase_price_date,
+          purchase_unit_symbol,
+          sales_price,
+          sales_unit_symbol,
+          search_name,
+          storage_dimension_group_name,
+          tare_product_weight,
+          tracking_dimension_group_name,
+          unit_cost,
+          category_level_1,
+          category_level_2,
+          category_level_3,
+          category_level_4,
+          qms_item_groups
+        )
+      `)
+      .range(offset, offset + pageLimit - 1);  // Pagination (offset and limit)
+  
+    // Applying filters if provided
+    if (search) {
+      query = query.ilike('name', `%${search}%`); // Case-insensitive search by name
+    }
+  
+    if (status) {
+      query = query.eq('status', status); // Filter by status
+    }
+  
+    if (category) {
+      query = query.eq('released_products.category', category); // Filter by category in related released_products
+    }
+  
+    // Execute the query
+    const { data, error, count } = await query;
+  
+    if (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Error fetching products' });
+    }
+  
+    // Send the response with pagination metadata and the queried data
+    res.json({
+      data,
+      pagination: {
+        currentPage: pageNumber,
+        pageSize: pageLimit,
+        totalPages: Math.ceil(count / pageLimit),
+        totalItems: count
+      }
+    });
+  });
