@@ -19,10 +19,12 @@
       .table-responsive {
         max-width: 100%;
         overflow-x: auto;
+        margin: 20px; /* Add margin around the table */
       }
 
       table {
-        width: 100%; /* Ensures the table fills the container */
+        width: calc(100% - 40px); /* Adds some space on both sides */
+        margin: 20px auto; /* Centers the table and adds vertical spacing */
       }
 
       /* Ensure pagination and next button are aligned correctly */
@@ -39,6 +41,21 @@
   <body>
     <div class="container-fluid mt-5">
       <h1 class="text-center">Product Management Dashboard</h1>
+      <!-- Filter Section -->
+      <div class="row">
+        <div class="col-md-3">
+          <label for="status-filter" class="form-label">Filter by Status</label>
+          <select class="form-select" id="status-filter">
+            <option value="">All Statuses</option>
+            <option value="Active">Active</option>
+            <option value="Withdrawn">Withdrawn</option>
+          </select>
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+          <button class="btn btn-primary" id="apply-filters-btn">Apply Filters</button>
+        </div>
+      </div>
 
       <!-- Product Table -->
       <div class="table-responsive mt-4">
@@ -60,10 +77,10 @@
       </div>
 
       <!-- Pagination Controls -->
-<nav class="d-flex justify-content-center align-items-center">
-  <ul class="pagination" id="pagination"></ul>
-  <button class="btn btn-primary ms-auto" id="next-button">Next 10 Pages</button>
-</nav>
+      <nav class="d-flex justify-content-center align-items-center">
+        <ul class="pagination" id="pagination"></ul>
+        <button class="btn btn-primary ms-auto" id="next-button">Next 10 Pages</button>
+      </nav>
 
       <!-- Edit Modal -->
       <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
@@ -88,7 +105,7 @@
                   <label for="edit-status" class="form-label">Status</label>
                   <select class="form-select" id="edit-status">
                     <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="Withdrawn">Withdrawn</option>
                   </select>
                 </div>
                 <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -107,15 +124,29 @@
       const pageSize = 17; // Change page size to 10
       let currentPageGroup = 1; // Track the group of 10 pages
 
-      // Fetch and display products
-      async function loadProducts(page) {
+      async function loadProducts(page, status = '') {
         currentPage = page;
-        const response = await fetch(`${apiUrl}?page=${page}&limit=${pageSize}`);
+
+        const response = await fetch(
+          `${apiUrl}?page=${page}&limit=${pageSize}&status=${status}`
+        );
         const result = await response.json();
 
         displayProducts(result.data);
         setupPagination(result.pagination);
       }
+
+      // Apply filters on button click
+      // Apply filters on button click
+document.getElementById('apply-filters-btn').addEventListener('click', () => {
+  const status = document.getElementById('status-filter').value;
+
+  // Properly reset page to 1 and apply filters
+  loadProducts(1, status);
+});
+
+      // Initial load
+      loadProducts(currentPage);
 
       // Populate the product table
       function displayProducts(products) {
