@@ -22,14 +22,20 @@ app.get('/', (req, res) => {
 
 // API endpoint for fetching products
 app.get('/api/products', async (req, res) => {
-  const { page = 1, limit = 20 } = req.query;
+  const { page = 1, limit = 20, status } = req.query;
   const offset = (page - 1) * limit;
 
   try {
-    const { data, error, count } = await supabase
+    let query = supabase
       .from('products')
       .select('*', { count: 'exact' })
       .range(offset, offset + parseInt(limit) - 1);
+
+    if (status) {
+      query = query.eq('product_status', status);
+    }
+
+    const { data, error, count } = await query;
 
     if (error) throw error;
 
@@ -39,14 +45,15 @@ app.get('/api/products', async (req, res) => {
         currentPage: parseInt(page),
         pageSize: parseInt(limit),
         totalItems: count,
-        totalPages: Math.ceil(count / limit)
-      }
+        totalPages: Math.ceil(count / limit),
+      },
     });
   } catch (error) {
     console.error('Error loading products:', error);
     res.status(500).json({ error: 'Error loading products' });
   }
 });
+
 
 // Serve public directory for frontend
 const path = require('path');
